@@ -10,7 +10,7 @@
 */
 ?>
 <?php is_tag(); ?>
-		<?php if (have_posts()) : ?>
+		<?php if (have_posts() || is_author()) { ?>
  	  		<?php $post = $posts[0]; // Hack. Set $post so that the_date() works. ?>
 
 	  <?php /* If this is an author archive */ if (is_author()) { ?>
@@ -90,8 +90,8 @@
 */
 ?>
 
-<?
-#<div id='mythumb'>php mythumb_nav(); </div>
+<?php
+/*<div id='mythumb'>php mythumb_nav(); </div>*/
 ?>
 
 		<?php while (have_posts()) : the_post(); ?>
@@ -147,13 +147,17 @@
 			<div class="alignleft"><?php next_posts_link('&laquo; Older Entries') ?></div>
 			<div class="alignright"><?php previous_posts_link('Newer Entries &raquo;') ?></div>
 		</div>
+    
+    <?php if (is_author() && !have_posts()) { ?>
+      <h2 class="center">No posts found.</h2>
+    <?php } ?>
 
-	<?php else : ?>
+	<?php } else { ?>
 
 		<h2 class="center">Not Found</h2>
 		<?php include (TEMPLATEPATH . '/searchform.php'); ?>
 
-	<?php endif; ?>
+	<?php }  ?>
 
 	</div>
 </div>
