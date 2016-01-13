@@ -150,7 +150,7 @@ function _compo2_preview($params,$_link="?action=preview") {
 }
 
 function compo2_strip($v) {
-	return stripslashes($v);
+	return stripslashes(trim($v));
 }
 
 function _compo2_preview_show_links($ce) {
@@ -163,7 +163,14 @@ function _compo2_preview_show_links($ce) {
 		$link = $le["link"];
 		if (strpos($link,"javascript:") === 0) { continue; }
 		if (strpos($link,"?") === 0) { continue; }
-		if (!preg_match("/^\w+\:\/\//",$link)) { continue; }
+		if (!preg_match("/^\w+\:\/\//",$link)) {
+			if (strlen($link) > 0) {
+				$link = 'http://' . $link;
+			}
+			else {
+				continue;
+			}
+		}
 		echo "<li><a href='".htmlentities($link)."' target='_blank'>".htmlentities($le["title"])."</a></li>";		
 //		echo "$pre<a href=\"".htmlentities($link)."\" target='_blank'>".htmlentities($le["title"])."</a>";
 //		$pre = " | ";
