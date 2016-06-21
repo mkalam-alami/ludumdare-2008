@@ -1,18 +1,13 @@
 <?php
 
-if (!isset($_GET['shite'])) {
+/*if (!isset($_GET['shite'])) {
 	echo "Thanks Everyone! You did great!";
 	die;
-}
+}*/
 
 
 /* Copy "settings-example.php" to "settings.php", and make your changes */
 include 'settings.php';
-
-$do_logging = false;
-$log_file = 'logs/log.txt';
-
-$killvote_weight = 3;
 
 /*
 CREATE DATABASE ludum_theme;
@@ -240,14 +235,24 @@ if (isset($_GET['shite']))
 		mysql_close($link);
 		die;
 }
-$agent = "BOT BOT BOT BOT BOT BOT";
-if (isset($_SERVER['HTTP_USER_AGENT'])) $agent = $_SERVER['HTTP_USER_AGENT'];
-if (isset($_GET['up']))
-{
-	//die;
-	$up = strval(intval( mysql_real_escape_string($_GET['up']) ));
 
-	$query = 'UPDATE `themes` SET `up`=`up`+1, `time`='.time().' WHERE `id`='.$up.' AND `time`<'.(time()-20).';';
+function vote($type, $id, $agent) {
+  global $agent;
+  
+  // Init
+	$id = strval(intval( mysql_real_escape_string($id) ));
+  
+  switch ($type) {
+    case 'UP':
+      $query = 'UPDATE `themes` SET `up`=`up`+1, `time`='.time().' WHERE `id`='.$id.' AND `time`<'.(time()-20).';';
+      break;
+    case 'KILL':
+      $query = 'UPDATE `themes` SET `kill`=`kill`+1, `time`='.time().' WHERE `id`='.$id.' AND `time`<'.(time()-20).';';
+      break;
+    default:
+      $query = 'UPDATE `themes` SET `down`=`down`+1, `time`='.time().' WHERE `id`='.$id.' AND `time`<'.(time()-20).';';
+  }
+  
 	if (!mysql_query($query)) die('Query error: ' . mysql_error());
 //	$query = 'UPDATE `themes` SET `up`=`up`+1 WHERE `id`=888888;';
 //	if (!mysql_query($query)) die('Query error: ' . mysql_error());
@@ -255,46 +260,56 @@ if (isset($_GET['up']))
 	global $do_logging,$log_file;
 	if ( $do_logging == true ) {
 		$ff = fopen($log_file,'a');
-		fwrite($ff,'IP: '.get_ip().' | UP: '.$up.' | TIME: '.date('d-m-y H:i:s').' | ' . $agent . "\n");
+		fwrite($ff,'IP: '.get_ip().' | ' . $type . ': '.$id.' | TIME: '.date('d-m-y H:i:s').' | ' . $agent . "\n");
 		fclose($ff);
 	}
 }
 
-if ( isset($_GET['down']))
+function vote_apcu($type, $score) {
+	global $vote_batch_size;
+  
+  if ($vote_batch_size > 1) {
+    $pending_votes = apcu_fetch("pending_votes");
+    
+    if (!is_array($pending_votes)) {
+      $pending_votes = array();
+    }
+    
+    $agent = "BOT BOT BOT BOT BOT BOT";
+    if (isset($_SERVER['HTTP_USER_AGENT'])) $agent = $_SERVER['HTTP_USER_AGENT'];
+    $pending_votes[] = array($type, $score, $agent);
+  
+    if (count($pending_votes) < $vote_batch_size) {
+      apcu_store("pending_votes", $pending_votes);
+    }
+    else {
+      if (!mysql_query('START TRANSACTION')) die('Query error: ' . mysql_error());
+      foreach ($pending_votes as $pending_vote) {
+        vote($pending_vote[0], $pending_vote[1], $pending_vote[2]);
+      }
+      if (!mysql_query('COMMIT')) die('Query error: ' . mysql_error());
+      
+      apcu_store("pending_votes", array());
+    }
+  }
+  else {
+    vote($type, $score);
+  }
+}
+
+if (isset($_GET['down']))
 {
-	//die;
-	$down = strval(intval( mysql_real_escape_string($_GET['down']) ));
-
-	$query = 'UPDATE `themes` SET `down`=`down`+1, `time`='.time().' WHERE `id`='.$down.' AND `time`<'.(time()-20).';';
-	if (!mysql_query($query)) die('Query error: ' . mysql_error());
-//	$query = 'UPDATE `themes` SET `up`=`up`+1 WHERE `id`=888888;';
-//	if (!mysql_query($query)) die('Query error: ' . mysql_error());
-	
-	global $do_logging,$log_file;
-	if ( $do_logging == true ) {
-		$ff = fopen($log_file,'a');
-		fwrite($ff,'IP: '.get_ip().' | DOWN: '.$down.' | TIME: '.date('d-m-y H:i:s').' | ' . $agent . "\n");
-		fclose($ff);
-	}
+  vote_apcu('DOWN', $_GET['down']);
 }
-
-if ( isset($_GET['kill']))
+else if (isset($_GET['up']))
 {
-	//die;
-	$kill = strval(intval( mysql_real_escape_string($_GET['kill']) ));
-
-	$query = 'UPDATE `themes` SET `kill`=`kill`+1, `time`='.time().' WHERE `id`='.$kill.' AND `time`<'.(time()-20).';';
-	if (!mysql_query($query)) die('Query error: ' . mysql_error());
-//	$query = 'UPDATE `themes` SET `up`=`up`+1 WHERE `id`=888888;';
-//	if (!mysql_query($query)) die('Query error: ' . mysql_error());
-	
-	global $do_logging,$log_file;
-	if ( $do_logging == true ) {
-		$ff = fopen($log_file,'a');
-		fwrite($ff,'IP: '.get_ip().' | KILL: '.$kill.' | TIME: '.date('d-m-y H:i:s').' | ' . $agent . "\n");
-		fclose($ff);
-	}
+  vote_apcu('UP', $_GET['up']);
 }
+else if (isset($_GET['kill']))
+{
+  vote_apcu('KILL', $_GET['kill']);
+}
+
 echo'<style>a { text-decoration:none; } a:hover { text-decoration:underline; }</style>';
 echo'<style>input { text-decoration:none; border:none; background: none; cursor: pointer; display: in-line; margin: 0px; padding: 0px; } input:hover { text-decoration:underline; }</style>';
 echo'<center style="font-family:sans-serif;"><img src="slaughter.gif"><br/><br /><table style="border:0px solid #555;font-size:250%;font-family:sans-serif;text-align:center;width:760px;">';
@@ -338,7 +353,6 @@ if ( $themes_total === false ) {
 	$themes_total = mysql_fetch_row($result)[0];
 	apcu_store("themes_total",$themes_total,$apcu_ttl);
 }
-
 
 $themes_eliminated = apcu_fetch("themes_eliminated");
 
