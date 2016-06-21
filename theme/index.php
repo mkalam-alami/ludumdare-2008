@@ -115,16 +115,49 @@ function get_db()
 	return $link;
 }
 
-$themes = array();
 $link = get_db();
-$query = 'SELECT * FROM `themes` WHERE `id`<800000 ORDER BY rand() LIMIT 1;';
-$c=0;
-$result = mysql_query($query);
-while ($line = mysql_fetch_array($result, MYSQL_ASSOC)) 
-{
-	$themes[$c]=$line;
-	$c++;
+  
+function fetch_random_themes($amount) {
+  global $link;
+  
+  $query = 'SELECT * FROM `themes` WHERE `id`<800000 ORDER BY rand() LIMIT ' . $amount . ';';
+  $result = mysql_query($query);
+  $themes = array();
+  while ($line = mysql_fetch_array($result, MYSQL_ASSOC)) 
+  {
+    $themes[] = $line;
+  }
+	mysql_free_result($result);
+  
+	global $do_logging,$log_file;
+	if ( $do_logging == true ) {
+		$ff = fopen($log_file,'a');
+		fwrite($ff,"FETCH\n");
+		fclose($ff);
+	}
+  
+  return $themes;
 }
+
+function fetch_random_theme_apcu() {
+  global $fetch_batch_size;
+  
+  if ($fetch_batch_size > 1) {
+    $random_themes = apcu_fetch("random_themes");
+    if (!$random_themes || count($random_themes) == 0) {
+      $random_themes = fetch_random_themes($fetch_batch_size);
+    }
+    $random_theme = array_pop($random_themes);
+    apcu_store("random_themes", $random_themes);
+    return array($random_theme);
+  }
+  else {
+    return fetch_random_themes(1);
+  }
+}
+  
+$themes = fetch_random_theme_apcu();
+
 /*
 $total = array();
 $query = 'SELECT * FROM `themes` WHERE `id`=888888;';
@@ -147,7 +180,6 @@ if (isset($_GET['shite']))
 {
 	global $killvote_weight;
 	//$number = ($_GET['view']='all');
-	mysql_free_result($result);
 	$sort = '(`up`-`down`-(`kill`*'.strval($killvote_weight).')) DESC';
 //	$sort = '(`up`-`down`-(`kill`*3) DESC';
 	if (isset($_GET['sort']))
@@ -352,6 +384,7 @@ if ( $themes_total === false ) {
 	$result = mysql_query($query);
 	$themes_total = mysql_fetch_row($result)[0];
 	apcu_store("themes_total",$themes_total,$apcu_ttl);
+  mysql_free_result($result);
 }
 
 $themes_eliminated = apcu_fetch("themes_eliminated");
@@ -361,6 +394,7 @@ if ( $themes_eliminated === false ) {
 	$result = mysql_query($query);
 	$themes_eliminated = mysql_fetch_row($result)[0];
 	apcu_store("themes_eliminated",$themes_eliminated,$apcu_ttl);
+  mysql_free_result($result);
 }
 
 
@@ -380,13 +414,13 @@ if ( $up_sum === false ) {
 	apcu_store("themes_down_sum",$down_sum,$apcu_ttl);
 	apcu_store("themes_kill_sum",$kill_sum,$apcu_ttl);
 	apcu_store("themes_timestamp",time(),$apcu_ttl);
+  mysql_free_result($result);
 }
 
 $total_sum = $up_sum+$down_sum+$kill_sum;
 
 echo '<small><b>Stats:</b> '.($themes_total).' total themes, '.($themes_eliminated).' eliminated (so far).<br />'.number_format($total_sum).' votes so far (U:'.number_format($up_sum).' D:'.number_format($down_sum).' S:'.number_format($kill_sum).').<br /><!--<strong>Updated:</strong> '.date(DATE_COOKIE,$timestamp).'--></small>';
 
-mysql_free_result($result);
 //mysql_free_result($result2);
 mysql_close($link);
 ?>
