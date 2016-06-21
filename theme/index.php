@@ -144,11 +144,27 @@ function fetch_random_theme_apcu() {
   
   if ($fetch_batch_size > 1) {
     $random_themes = apcu_fetch("random_themes");
-    if (!$random_themes || count($random_themes) == 0) {
+    $size = count($random_themes);
+    
+    // Refresh themes while optimizing for concurrency
+    if ((!$random_themes || $size == 1) && apcu_fetch("random_themes_busy") < time() - 20) {
+      apcu_store("random_themes_busy", time());
       $random_themes = fetch_random_themes($fetch_batch_size);
+      $size = $fetch_batch_size;
+      apcu_store("random_themes", $random_themes);
+      apcu_store("random_themes_busy", 0);
     }
-    $random_theme = array_pop($random_themes);
+    
+    // Don't exhaust the theme list in case refreshing is busy
+    if ($size > 1) {
+      $random_theme = array_pop($random_themes);
+    }
+    else {
+      if ($size == 0) die('No theme to rate');
+      $random_theme = $random_themes[0];
+    }
     apcu_store("random_themes", $random_themes);
+    
     return array($random_theme);
   }
   else {
@@ -282,7 +298,10 @@ function vote($type, $id, $ip, $agent) {
       $query = 'UPDATE `themes` SET `down`=`down`+1, `time`='.time().' WHERE `id`='.$id.' AND `time`<'.(time()-20).';';
   }
   
-	if (!mysql_query($query)) die('Query error: ' . mysql_error());
+	if (!mysql_query($query)) {
+    mysql_query('COMMIT'); // Still try to commit past votes from the same transaction
+    die('Query error: ' . mysql_error());
+  }
 //	$query = 'UPDATE `themes` SET `up`=`up`+1 WHERE `id`=888888;';
 //	if (!mysql_query($query)) die('Query error: ' . mysql_error());
 	
@@ -302,7 +321,6 @@ function vote_apcu($type, $score) {
   
   if ($vote_batch_size > 1) {
     $pending_votes = apcu_fetch("pending_votes");
-    
     if (!is_array($pending_votes)) {
       $pending_votes = array();
     }
@@ -312,18 +330,20 @@ function vote_apcu($type, $score) {
           'ip' => get_ip(),
           'agent' => $agent
       );
-  
-    if (count($pending_votes) < $vote_batch_size) {
-      apcu_store("pending_votes", $pending_votes);
-    }
-    else {
+    apcu_store("pending_votes", $pending_votes);
+    
+    // Submit to DB while optimizing for concurrency
+    if (count($pending_votes) < $vote_batch_size && apcu_fetch("pending_votes_busy") < time() - 20) {
+      apcu_store("pending_votes_busy", time());
+      apcu_store("pending_votes", array());
+      
       if (!mysql_query('START TRANSACTION')) die('Query error: ' . mysql_error());
       foreach ($pending_votes as $pending_vote) {
         vote($pending_vote['type'], $pending_vote['score'], $pending_vote['ip'], $pending_vote['agent']);
       }
       if (!mysql_query('COMMIT')) die('Query error: ' . mysql_error());
       
-      apcu_store("pending_votes", array());
+      apcu_store("pending_votes_busy", 0);
     }
   }
   else {
