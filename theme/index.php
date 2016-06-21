@@ -158,12 +158,12 @@ function fetch_random_theme_apcu() {
     // Don't exhaust the theme list in case refreshing is busy
     if ($size > 1) {
       $random_theme = array_pop($random_themes);
+      apcu_store("random_themes", $random_themes);
     }
     else {
       if ($size == 0) die('No theme to rate');
       $random_theme = $random_themes[0];
     }
-    apcu_store("random_themes", $random_themes);
     
     return array($random_theme);
   }
@@ -319,6 +319,7 @@ function vote_apcu($type, $score) {
   $agent = "BOT BOT BOT BOT BOT BOT";
   if (isset($_SERVER['HTTP_USER_AGENT'])) $agent = $_SERVER['HTTP_USER_AGENT'];
   
+  $time = time();
   if ($vote_batch_size > 1) {
     $pending_votes = apcu_fetch("pending_votes");
     if (!is_array($pending_votes)) {
@@ -329,26 +330,29 @@ function vote_apcu($type, $score) {
           'score' => $score,
           'ip' => get_ip(),
           'agent' => $agent,
-          'time' => time()
+          'time' => $time
       );
-    apcu_store("pending_votes", $pending_votes);
     
     // Submit to DB while optimizing for concurrency
-    if (count($pending_votes) >= $vote_batch_size && apcu_fetch("pending_votes_busy") < time() - 20) {
-      apcu_store("pending_votes_busy", time());
-      apcu_store("pending_votes", array());
+    if (apcu_fetch("pending_votes_busy") < $time - 20) {
+      apcu_store("pending_votes", $pending_votes);
       
-      if (!mysql_query('START TRANSACTION')) die('Query error: ' . mysql_error());
-      foreach ($pending_votes as $pending_vote) {
-        vote($pending_vote['type'], $pending_vote['score'], $pending_vote['ip'], $pending_vote['agent'], $pending_vote['time']);
+      if (count($pending_votes) >= $vote_batch_size) {
+        apcu_store("pending_votes_busy", $time);
+        apcu_store("pending_votes", array());
+        
+        if (!mysql_query('START TRANSACTION')) die('Query error: ' . mysql_error());
+        foreach ($pending_votes as $pending_vote) {
+          vote($pending_vote['type'], $pending_vote['score'], $pending_vote['ip'], $pending_vote['agent'], $pending_vote['time']);
+        }
+        if (!mysql_query('COMMIT')) die('Query error: ' . mysql_error());
+        
+        apcu_store("pending_votes_busy", 0);
       }
-      if (!mysql_query('COMMIT')) die('Query error: ' . mysql_error());
-      
-      apcu_store("pending_votes_busy", 0);
     }
   }
   else {
-    vote($type, $score, get_ip(), $agent, time());
+    vote($type, $score, get_ip(), $agent, $time);
   }
 }
 
