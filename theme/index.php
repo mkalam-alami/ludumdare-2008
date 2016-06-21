@@ -268,10 +268,7 @@ if (isset($_GET['shite']))
 		die;
 }
 
-function vote($type, $id, $agent) {
-  global $agent;
-  
-  // Init
+function vote($type, $id, $ip, $agent) {
 	$id = strval(intval( mysql_real_escape_string($id) ));
   
   switch ($type) {
@@ -292,13 +289,16 @@ function vote($type, $id, $agent) {
 	global $do_logging,$log_file;
 	if ( $do_logging == true ) {
 		$ff = fopen($log_file,'a');
-		fwrite($ff,'IP: '.get_ip().' | ' . $type . ': '.$id.' | TIME: '.date('d-m-y H:i:s').' | ' . $agent . "\n");
+		fwrite($ff,'IP: '.$ip.' | ' . $type . ': '.$id.' | TIME: '.date('d-m-y H:i:s').' | ' . $agent . "\n");
 		fclose($ff);
 	}
 }
 
 function vote_apcu($type, $score) {
 	global $vote_batch_size;
+    
+  $agent = "BOT BOT BOT BOT BOT BOT";
+  if (isset($_SERVER['HTTP_USER_AGENT'])) $agent = $_SERVER['HTTP_USER_AGENT'];
   
   if ($vote_batch_size > 1) {
     $pending_votes = apcu_fetch("pending_votes");
@@ -306,10 +306,12 @@ function vote_apcu($type, $score) {
     if (!is_array($pending_votes)) {
       $pending_votes = array();
     }
-    
-    $agent = "BOT BOT BOT BOT BOT BOT";
-    if (isset($_SERVER['HTTP_USER_AGENT'])) $agent = $_SERVER['HTTP_USER_AGENT'];
-    $pending_votes[] = array($type, $score, $agent);
+    $pending_votes[] = array(
+          'type' => $type,
+          'score' => $score,
+          'ip' => get_ip(),
+          'agent' => $agent
+      );
   
     if (count($pending_votes) < $vote_batch_size) {
       apcu_store("pending_votes", $pending_votes);
@@ -317,7 +319,7 @@ function vote_apcu($type, $score) {
     else {
       if (!mysql_query('START TRANSACTION')) die('Query error: ' . mysql_error());
       foreach ($pending_votes as $pending_vote) {
-        vote($pending_vote[0], $pending_vote[1], $pending_vote[2]);
+        vote($pending_vote['type'], $pending_vote['score'], $pending_vote['ip'], $pending_vote['agent']);
       }
       if (!mysql_query('COMMIT')) die('Query error: ' . mysql_error());
       
@@ -325,7 +327,7 @@ function vote_apcu($type, $score) {
     }
   }
   else {
-    vote($type, $score);
+    vote($type, $score, get_ip(), $agent);
   }
 }
 
