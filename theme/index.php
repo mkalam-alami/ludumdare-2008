@@ -1,10 +1,13 @@
 <?php
 
-/*if (!isset($_GET['shite'])) {
-	echo "Thanks Everyone! You did great!";
-	die;
-}*/
+define('RESULTS_VAR', 'polder');
 
+// if (!isset($_GET[RESULTS_VAR])) {
+// 	echo "Thanks Everyone! You did great!";
+// 	die;
+// }
+
+error_reporting(0);
 
 /* Copy "settings-example.php" to "settings.php", and make your changes */
 include 'settings.php';
@@ -37,30 +40,30 @@ LOAD DATA LOCAL INFILE '/home/username/www/theme/ld26.txt' INTO TABLE themes LIN
 */
 
 /*
-REMOVING 
+REMOVING
 
-SELECT * FROM `themes` 
+SELECT * FROM `themes`
 	WHERE `id`<800000 AND (`up`-`down`-(`kill`*3))<-100;
 
 
-UPDATE `themes` 
-	SET `id`=`id`+800000 
+UPDATE `themes`
+	SET `id`=`id`+800000
 	WHERE `id`<800000 AND (`up`-`down`-(`kill`*3))<-100;
 
 
 */
 
-function get_ip() { 
-	$ip; 
-	if (getenv("HTTP_CLIENT_IP")) 
-		$ip = getenv("HTTP_CLIENT_IP"); 
-	else if(getenv("HTTP_X_FORWARDED_FOR")) 
-		$ip = getenv("HTTP_X_FORWARDED_FOR"); 
-	else if(getenv("REMOTE_ADDR")) 
-		$ip = getenv("REMOTE_ADDR"); 
-	else 
+function get_ip() {
+	$ip;
+	if (getenv("HTTP_CLIENT_IP"))
+		$ip = getenv("HTTP_CLIENT_IP");
+	else if(getenv("HTTP_X_FORWARDED_FOR"))
+		$ip = getenv("HTTP_X_FORWARDED_FOR");
+	else if(getenv("REMOTE_ADDR"))
+		$ip = getenv("REMOTE_ADDR");
+	else
 		$ip = "UNKNOWN";
-	return $ip; 
+	return $ip;
 }
 
 function is_bot($user_agent)
@@ -87,7 +90,7 @@ function is_bot($user_agent)
     if(strpos($user_agent,$bot) !== false)
     { return 1; }
   }
-  
+
   return 0;
 }
 
@@ -102,13 +105,13 @@ foreach ($bans as $b)
 		ECHO '<H1>Sincerely, Sos ( just.sos.it@gmail.com )</h1>';
 		die;
 	}
-	
+
 }
 
 function get_db()
 {
 	global $login, $password, $database;
-	
+
 	$link = mysql_connect('localhost', $login, $password);
 	if (!$link) die('Could not connect: ' . mysql_error());
 	if (!mysql_select_db($database)) die('Could not select database');
@@ -178,7 +181,7 @@ $themes = fetch_random_theme_apcu();
 $total = array();
 $query = 'SELECT * FROM `themes` WHERE `id`=888888;';
 $result2 = mysql_query($query);
-while ($line = mysql_fetch_array($result2, MYSQL_ASSOC)) 
+while ($line = mysql_fetch_array($result2, MYSQL_ASSOC))
 {
 	$total=$line;
 }
@@ -191,8 +194,8 @@ $pixs = ($total['up'])/($target/100);
 //echo'<center style="font-family:sans-serif;"><br/><br/><h1>'.$total['up'].' votes were given</H1></CENTER>';
 //echo'<center style="font-family:sans-serif;"><br/><br/><h1>I am too sleepy to do post results tonight.</H1></CENTER>';
 
-//$_GET['shite']='all';
-if (isset($_GET['shite']))
+//$_GET[RESULTS_VAR]='all';
+if (isset($_GET[RESULTS_VAR]))
 {
 	global $killvote_weight;
 	//$number = ($_GET['view']='all');
@@ -209,36 +212,36 @@ if (isset($_GET['shite']))
 		if (($_GET['sort'])=='6') $sort = '(`up`-`down`) DESC';
 		if (($_GET['sort'])=='7') $sort = '(`up`-`down`-`kill`) DESC';
 	}
-//	$query = 'SELECT * FROM `themes` WHERE `id`<800000 ORDER BY '.$sort.' '.(($_GET['shite']=='all') ? '' : 'LIMIT 250').';';
-	$query = 'SELECT * FROM `themes` '.(($_GET['shite']=='all') ? '' : 'WHERE `id`<800000').' ORDER BY '.$sort.' '.(($_GET['shite']=='all') ? '' : 'LIMIT 250').';';
+//	$query = 'SELECT * FROM `themes` WHERE `id`<800000 ORDER BY '.$sort.' '.(($_GET[RESULTS_VAR]=='all') ? '' : 'LIMIT 250').';';
+	$query = 'SELECT * FROM `themes` '.(($_GET[RESULTS_VAR]=='all') ? '' : 'WHERE `id`<800000').' ORDER BY '.$sort.' '.(($_GET[RESULTS_VAR]=='all') ? '' : 'LIMIT 250').';';
 	$c=0;
 	$result = mysql_query($query);
 	if (!$result) die('Query error: ' . mysql_error());
-	echo '<h1 style="color:red;font-family:sans-serif;text-align:center;">THEME KILLING RESULTS!</h1>';              
-//	echo '<b style="color:#48f;font-family:sans-serif;text-align:center;display:block;">'.$total['up'].' votes given</b>';  
-	echo '<b style="color:#48f;font-family:sans-serif;text-align:center;display:block;">Killvote Weight: '.$killvote_weight.'</b>';  
+	echo '<h1 style="color:red;font-family:sans-serif;text-align:center;">THEME KILLING RESULTS!</h1>';
+//	echo '<b style="color:#48f;font-family:sans-serif;text-align:center;display:block;">'.$total['up'].' votes given</b>';
+	echo '<b style="color:#48f;font-family:sans-serif;text-align:center;display:block;">Killvote Weight: '.$killvote_weight.'</b>';
 
 	echo '<table style="width:90%;font-family:sans-serif;">';
 	echo '
 	<tr>
-		<td width=40><b><a href="?shite='.$_GET['shite'].'&sort=0">RANK</a></b></td>
-		<td width=250><b><a href="?shite='.$_GET['shite'].'&sort=1">THEME</a></b></td>
-		<td width=300><b><a href="?shite='.$_GET['shite'].'&sort=2">UP VOTES</a></b></td>
-		<td><b><a href="?shite='.$_GET['shite'].'&sort=3">DOWN</a></b></td>
-		<td><b><a href="?shite='.$_GET['shite'].'&sort=4">KILL</a></b></td>
-		<td><b><a href="?shite='.$_GET['shite'].'&sort=5">SUM</a></b></td>
-		<td><b><a href="?shite='.$_GET['shite'].'&sort=6">UP-DOWN</a></b></td>
-		<td><b><a href="?shite='.$_GET['shite'].'&sort=7">WEIGHTLESS</a></b></td>
-		<td><b><a href="?shite='.$_GET['shite'].'&sort=0">TOTAL <font size="-2">(WEIGHTED)</font></a></b></td>
+		<td width=40><b><a href="?'.RESULTS_VAR.'='.$_GET[RESULTS_VAR].'&sort=0">RANK</a></b></td>
+		<td width=250><b><a href="?'.RESULTS_VAR.'='.$_GET[RESULTS_VAR].'&sort=1">THEME</a></b></td>
+		<td width=300><b><a href="?'.RESULTS_VAR.'='.$_GET[RESULTS_VAR].'&sort=2">UP VOTES</a></b></td>
+		<td><b><a href="?'.RESULTS_VAR.'='.$_GET[RESULTS_VAR].'&sort=3">DOWN</a></b></td>
+		<td><b><a href="?'.RESULTS_VAR.'='.$_GET[RESULTS_VAR].'&sort=4">KILL</a></b></td>
+		<td><b><a href="?'.RESULTS_VAR.'='.$_GET[RESULTS_VAR].'&sort=5">SUM</a></b></td>
+		<td><b><a href="?'.RESULTS_VAR.'='.$_GET[RESULTS_VAR].'&sort=6">UP-DOWN</a></b></td>
+		<td><b><a href="?'.RESULTS_VAR.'='.$_GET[RESULTS_VAR].'&sort=7">WEIGHTLESS</a></b></td>
+		<td><b><a href="?'.RESULTS_VAR.'='.$_GET[RESULTS_VAR].'&sort=0">TOTAL <font size="-2">(WEIGHTED)</font></a></b></td>
 	</tr>
 	';
 	$c=0;
 	$ups=0;
 	$downs=0;
 	$kills=0;
-	
+
 	global $killvote_weight;
-	while ($line = mysql_fetch_array($result, MYSQL_ASSOC)) 
+	while ($line = mysql_fetch_array($result, MYSQL_ASSOC))
 	{
 		$votes = $line['up'];
 		$downvotes = $line['down'];
@@ -246,7 +249,7 @@ if (isset($_GET['shite']))
 		$sum = $votes + $downvotes + $killvotes;
 		$updown = $votes - $downvotes;
 		$updownkill = $votes - $downvotes - $killvotes;
-		
+
 		if ( intval($line['id']) < 800000 )
 			echo '<tr style="background:'. (($c&1) ? '#eee' : '#ddd').';">';
 		else
@@ -275,9 +278,9 @@ if (isset($_GET['shite']))
 		$kills+=$line['kill'];
 	}
 	echo '</table>';
-	echo '<b style="color:#4f8;font-family:sans-serif;text-align:center;display:block;">'.$ups.' upvotes given</b>';	
-	echo '<b style="color:#f84;font-family:sans-serif;text-align:center;display:block;">'.$downs.' downvotes given</b>';	
-	echo '<b style="color:#f84;font-family:sans-serif;text-align:center;display:block;">'.$kills.' killvotes given</b>';	
+	echo '<b style="color:#4f8;font-family:sans-serif;text-align:center;display:block;">'.$ups.' upvotes given</b>';
+	echo '<b style="color:#f84;font-family:sans-serif;text-align:center;display:block;">'.$downs.' downvotes given</b>';
+	echo '<b style="color:#f84;font-family:sans-serif;text-align:center;display:block;">'.$kills.' killvotes given</b>';
 		mysql_free_result($result);
 //		mysql_free_result($result2);
 		mysql_close($link);
@@ -304,7 +307,7 @@ function vote($type, $id, $ip, $agent, $time) {
   }
 //	$query = 'UPDATE `themes` SET `up`=`up`+1 WHERE `id`=888888;';
 //	if (!mysql_query($query)) die('Query error: ' . mysql_error());
-	
+
 	global $do_logging,$log_file;
 	if ( $do_logging == true ) {
 		$ff = fopen($log_file,'a');
@@ -369,14 +372,244 @@ else if (isset($_GET['kill']))
   vote_apcu('KILL', $_GET['kill']);
 }
 
-echo'<style>a { text-decoration:none; } a:hover { text-decoration:underline; }</style>';
-echo'<style>input { text-decoration:none; border:none; background: none; cursor: pointer; display: in-line; margin: 0px; padding: 0px; } input:hover { text-decoration:underline; }</style>';
-echo'<center style="font-family:sans-serif;"><img src="slaughter.gif"><br/><br /><table style="border:0px solid #555;font-size:250%;font-family:sans-serif;text-align:center;width:760px;">';
-echo'<tr><td style="border:0px solid #555;padding:16px;text-align:center;font-weight:bold;font-size:125%;" colspan=2><a target="_blank" style="color:#4b7aa0;" href="https://www.google.com/search?q='.urlencode($themes[0]['theme']).'">'.$themes[0]['theme'].'</a></td></tr>';
+// slaughter HTML
+?>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Ludum Dare Theme Slaughter</title>
 
-echo'<tr><td style="border:1px solid #555;padding:16px;text-align:center;width:50%;"><a style="color:#080;" href="?up='.$themes[0]['id'].'">GOOD</a></td>';
-echo'<td style="border:1px solid #555;padding:16px;text-align:center;width:50%;"><a style="color:#800;" href="?down='.$themes[0]['id'].'">BAD</a></td></tr>';
-echo'<tr><td style="border:1px solid #555;padding:16px;text-align:center;" colspan=2;><a style="color:#f00;" href="?kill='.$themes[0]['id'].'">SLAUGHTER</a></td></tr>';
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1" />
+
+    <style>
+      html, body
+      {
+        font-family: sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+
+      .seo
+      {
+        position: absolute;
+        top: -99999px;
+      }
+
+      .nobr
+      {
+        white-space: nowrap;
+      }
+
+      header, section, footer
+      {
+        display: block;
+        margin: 0 auto;
+        text-align: center;
+        overflow: hidden;
+      }
+
+      header, section
+      {
+        width: 100%;
+        max-width: 600px;
+      }
+
+      footer
+      {
+        background-color: #ddd;
+        padding: 10px;
+        line-height: 1.3em;
+      }
+
+      #logo
+      {
+        width: 100%;
+        max-width: 376px;
+        margin-top: 20px;
+      }
+
+      #theme
+      {
+        display: inline-block;
+        color: #315ab0;
+        font-size: 150%;
+      }
+
+      #vote
+      {
+        overflow: hidden;
+        width: 90%;
+        margin: 0 auto;
+      }
+        #vote a.button
+        {
+          display: inline-block;
+          border: solid 2px #888;
+          padding: 10px;
+          font-size: 200%;
+          text-decoration: none;
+          text-transform: uppercase;
+          font-weight: bold;
+          box-sizing: border-box;
+        }
+        #vote a.button:hover,
+        #vote a.button:focus
+        {
+          background-color: #eee;
+        }
+        #vote a.button:active
+        {
+          border-color: #000;
+        }
+        #good
+        {
+          width: 45%;
+          float: left;
+          color: #080;
+        }
+        #bad
+        {
+          width: 45%;
+          float: right;
+          color: #800;
+        }
+        #slaughter
+        {
+          width: 100%;
+          clear: both;
+          margin-top: 20px;
+          color: #f00;
+        }
+
+      .info
+      {
+        margin: 2em 0;
+        padding: 10px;
+      }
+        .info ul
+        {
+          list-style-type: square;
+          text-align: left;
+          width: 12em;
+          margin: 0 auto;
+        }
+          .info ul li
+          {
+            margin-bottom: 0.5em;
+          }
+
+      @media(max-width: 400px)
+      {
+        #logo
+        {
+          width: 70%;
+          height: auto;
+        }
+        .optional
+        {
+          display: none;
+        }
+      }
+
+      @media(max-height: 550px)
+      {
+        #logo
+        {
+          max-height: 120px;
+          width: auto;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <h1 class="seo">Ludum Dare Theme Slaughter</h1>
+
+      <img src="slaughter.gif" alt="Ludum Dare Theme Slaughter" id="logo" width="376" height="240" />
+    </header>
+
+    <section>
+      <h2>
+        <a href="https://www.google.com/search?q=<?= urlencode($themes[0]['theme']); ?>" target="_blank" id="theme">
+          <?= $themes[0]['theme']; ?>
+        </a>
+      </h2>
+
+      <div id="vote">
+        <a id="good" class="button" href="?up=<?= $themes[0]['id']; ?>">
+          good<span class="optional"> (j)</span>
+        </a>
+
+        <a id="bad" class="button" href="?down=<?= $themes[0]['id']; ?>">
+          bad<span class="optional"> (k)</span>
+        </a>
+
+        <a id="slaughter" class="button" href="?kill=<?= $themes[0]['id']; ?>">
+          slaughter!<span class="optional"> (l)</span>
+        </a>
+      </div>
+
+      <div class="info">
+        <h3>How this works:</h3>
+        <p>
+          You get a theme, and click <span class="nobr"><strong>GOOD</strong> or <strong>BAD</strong>.</span>
+        </p>
+        <p>
+          If you feel a theme is inappropriate (or just hate it), click <strong>SLAUGHTER!</strong>
+        </p>
+        <p>
+          Repeat. Every click helps :)
+        </p>
+        <p>
+          Thanks to <a href="https://twitter.com/LiamLimeGames" target="_blank">LiamLime</a> you can now also use keyboard shortcuts:
+        </p>
+
+        <ul>
+          <li>Press <strong>J</strong> to vote <strong>good</strong></li>
+          <li>Press <strong>K</strong> to vote <strong>bad</strong></li>
+          <li>Press <strong>L</strong> to vote <strong>slaughter</strong></li>
+        </ul>
+      </div>
+    </section>
+
+    <footer>
+      <p>Thanks to <a href="https://twitter.com/mkalamalami" target="_blank">Wan</a> for hosting the slaughter for LD36!</p>
+
+      <p>
+        Special thanks to <a href="https://twitter.com/Sosowski" target="_blank">Sos</a> for creating the original Slaughter
+        <br/>
+        and <a href="https://twitter.com/mikekasprzak" target="_blank">PoV</a> for everything he has done for LD all these years.
+      </p>
+    </footer>
+
+    <script>
+    document.addEventListener("keyup", function(evt) {
+      var s = String.fromCharCode(evt.keyCode);
+
+      if(s === "J") {
+        window.location = document.getElementById('good').href;
+      } else if(s === "K") {
+        window.location = document.getElementById('bad').href;
+      } else if(s === "L") {
+        window.location = document.getElementById('slaughter').href;
+      }
+    }, false);
+    </script>
+  </body>
+</html>
+
+<?php
+
+// echo'<style>a { text-decoration:none; } a:hover { text-decoration:underline; }</style>';
+// echo'<style>input { text-decoration:none; border:none; background: none; cursor: pointer; display: in-line; margin: 0px; padding: 0px; } input:hover { text-decoration:underline; }</style>';
+// echo'<center style="font-family:sans-serif;"><img src="slaughter.gif"><br/><br /><table style="border:0px solid #555;font-size:250%;font-family:sans-serif;text-align:center;width:760px;">';
+// echo'<tr><td style="border:0px solid #555;padding:16px;text-align:center;font-weight:bold;font-size:125%;" colspan=2><a target="_blank" style="color:#4b7aa0;" href="https://www.google.com/search?q='.urlencode($themes[0]['theme']).'">'.$themes[0]['theme'].'</a></td></tr>';
+//
+// echo'<tr><td style="border:1px solid #555;padding:16px;text-align:center;width:50%;"><a style="color:#080;" href="?up='.$themes[0]['id'].'">GOOD</a></td>';
+// echo'<td style="border:1px solid #555;padding:16px;text-align:center;width:50%;"><a style="color:#800;" href="?down='.$themes[0]['id'].'">BAD</a></td></tr>';
+// echo'<tr><td style="border:1px solid #555;padding:16px;text-align:center;" colspan=2;><a style="color:#f00;" href="?kill='.$themes[0]['id'].'">SLAUGHTER</a></td></tr>';
 
 //echo'<tr><td style="border:1px solid #555;padding:16px;text-align:center;width:50%;"><form method="post"><input type="hidden" name="up" value="'.$themes[0]['id'].'" /><input style="color:#080;" type="submit" value="GOOD" /></form></td>';
 //echo'<td style="border:1px solid #555;padding:16px;text-align:center;width:50%;"><a style="color:#800;" href="?down='.$themes[0]['id'].'">BAD</a></td></tr>';
@@ -387,20 +620,20 @@ echo'<tr><td style="border:1px solid #555;padding:16px;text-align:center;" colsp
 //echo '<i style="font-size:50%">Target kill count: <del>100000</del> '.$target.'</i><br/>';
 //echo '<div style="text-align:left;border:1px solid black; width:100%;"><img src="greenbar.png" width="'.$pixs.'%" height="32"></div>';
 //echo '</td>';
-echo '</tr>';
-echo '</table>';
-echo '<br/><font size="+2"><b>How this works:</b></font><br />';
-echo '
-You get a theme, and click <b>GOOD</b> or <b>BAD</b>!<br />
-If you feel a theme is inappropriate (or just hate it), click <b>SLAUGHTER</b><br />
-Repeat. Every click helps!<br />';
+// echo '</tr>';
+// echo '</table>';
+// echo '<br/><font size="+2"><b>How this works:</b></font><br />';
+// echo '
+// You get a theme, and click <b>GOOD</b> or <b>BAD</b>!<br />
+// If you feel a theme is inappropriate (or just hate it), click <b>SLAUGHTER</b><br />
+// Repeat. Every click helps!<br />';
 //<b>no hacking plz!</b><br/>';
 //<br>
 //<b style="color:#248;font-size:250%;">NOTE:</b><br/>
 //<span style="color:#048;font-size:150%;">Stuff like <i>\'2-bit art\' or \'one button controls\' or \'racing game\'</i><br/>and any other implying genre, technical or any other limitations are <B>NOT THEMES</b><br/>Please vote them down. I will remove them regardless of votes anyways.</span>
 //';
-echo '<br />
-<!--Special thanks to <a href="http://twitter.com/Sosowski">Sos</a> for creating the Slaughter-->';
+// echo '<br />
+// <!--Special thanks to <a href="http://twitter.com/Sosowski">Sos</a> for creating the Slaughter-->';
 
 $apcu_ttl = 60*10;
 
