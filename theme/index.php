@@ -372,6 +372,55 @@ else if (isset($_GET['kill']))
   vote_apcu('KILL', $_GET['kill']);
 }
 
+
+
+$apcu_ttl = 60*10;
+
+$themes_total = apcu_fetch("themes_total");
+
+if ( $themes_total === false ) {
+  $query = 'SELECT count(`id`) AS total FROM `themes`;';
+  $result = mysql_query($query);
+  $themes_total = mysql_fetch_row($result)[0];
+  apcu_store("themes_total",$themes_total,$apcu_ttl);
+  mysql_free_result($result);
+}
+
+$themes_eliminated = apcu_fetch("themes_eliminated");
+
+if ( $themes_eliminated === false ) {
+  $query = 'SELECT count(`id`) AS total FROM `themes` WHERE `id`>800000;';
+  $result = mysql_query($query);
+  $themes_eliminated = mysql_fetch_row($result)[0];
+  apcu_store("themes_eliminated",$themes_eliminated,$apcu_ttl);
+  mysql_free_result($result);
+}
+
+
+$up_sum = apcu_fetch("themes_up_sum");
+$down_sum = apcu_fetch("themes_down_sum");
+$kill_sum = apcu_fetch("themes_kill_sum");
+$timestamp = apcu_fetch("themes_timestamp");
+
+if ( $up_sum === false ) {
+  $query = "SELECT SUM(`up`) as up_sum, SUM(`down`) as down_sum, SUM(`kill`) as kill_sum FROM `themes`;";
+  $result = mysql_query($query);
+  $row = mysql_fetch_row($result);
+  $up_sum = $row[0];
+  $down_sum = $row[1];
+  $kill_sum = $row[2];
+  apcu_store("themes_up_sum",$up_sum,$apcu_ttl);
+  apcu_store("themes_down_sum",$down_sum,$apcu_ttl);
+  apcu_store("themes_kill_sum",$kill_sum,$apcu_ttl);
+  apcu_store("themes_timestamp",time(),$apcu_ttl);
+  mysql_free_result($result);
+}
+
+$total_sum = $up_sum+$down_sum+$kill_sum;
+
+//mysql_free_result($result2);
+mysql_close($link);
+
 // slaughter HTML
 ?>
 <!DOCTYPE html>
@@ -406,7 +455,7 @@ else if (isset($_GET['kill']))
         display: block;
         margin: 0 auto;
         text-align: center;
-        overflow: hidden;
+        overflow: auto;
       }
 
       header, section
@@ -417,9 +466,18 @@ else if (isset($_GET['kill']))
 
       footer
       {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
         background-color: #ddd;
         padding: 10px;
         line-height: 1.3em;
+        font-size: 80%;
+      }
+
+      p {
+        margin: 10px 0;
       }
 
       #logo
@@ -496,7 +554,7 @@ else if (isset($_GET['kill']))
         }
           .info ul li
           {
-            margin-bottom: 0.5em;
+            margin-bottom: 0.2em;
           }
 
       @media(max-width: 400px)
@@ -509,6 +567,14 @@ else if (isset($_GET['kill']))
         .optional
         {
           display: none;
+        }
+      }
+
+      @media(max-height: 850px)
+      {
+        footer
+        {
+          position: relative;
         }
       }
 
@@ -562,9 +628,6 @@ else if (isset($_GET['kill']))
         <p>
           Repeat. Every click helps :)
         </p>
-        <p>
-          Thanks to <a href="https://twitter.com/LiamLimeGames" target="_blank">LiamLime</a> you can now also use keyboard shortcuts:
-        </p>
 
         <ul>
           <li>Press <strong>J</strong> to vote <strong>good</strong></li>
@@ -575,12 +638,22 @@ else if (isset($_GET['kill']))
     </section>
 
     <footer>
-      <p>Thanks to <a href="https://twitter.com/mkalamalami" target="_blank">Wan</a> for hosting the slaughter for LD36!</p>
-
-      <p>
-        Special thanks to <a href="https://twitter.com/Sosowski" target="_blank">Sos</a> for creating the original Slaughter
+      <p style="width: 30%; float: right; text-align: right">
+        <?php
+        echo '<b>Stats:</b> '
+          .($themes_total).' total themes, '
+          .($themes_eliminated).' eliminated (so far).<br />'
+          .number_format($total_sum).' votes so far (U:'.number_format($up_sum)
+            .' D:'.number_format($down_sum).' S:'.number_format($kill_sum).').'
+          .'<br /><!--<strong>Updated:</strong> '.date(DATE_COOKIE,$timestamp).'-->';
+        ?>
+      </p>
+      <p style="width: 60%; float: left; text-align: left">
+        Special thanks to <a href="https://twitter.com/Sosowski" target="_blank">Sos</a> for creating the original Slaughter.
         <br/>
-        and <a href="https://twitter.com/mikekasprzak" target="_blank">PoV</a> for everything he has done for LD all these years.
+        Contributors include <a href="https://twitter.com/mikekasprzak" target="_blank">PoV</a> (performance!), <a href="https://twitter.com/LiamLimeGames" target="_blank">LiamLime</a> (keyboard shortcuts!), <a href="https://twitter.com/martijnfrazer">Tijn</a> (better looks!).
+        <br />
+        Hosted by  <a href="https://twitter.com/mkalamalami" target="_blank">Wan</a>.
       </p>
     </footer>
 
@@ -635,52 +708,4 @@ else if (isset($_GET['kill']))
 // echo '<br />
 // <!--Special thanks to <a href="http://twitter.com/Sosowski">Sos</a> for creating the Slaughter-->';
 
-$apcu_ttl = 60*10;
-
-$themes_total = apcu_fetch("themes_total");
-
-if ( $themes_total === false ) {
-	$query = 'SELECT count(`id`) AS total FROM `themes`;';
-	$result = mysql_query($query);
-	$themes_total = mysql_fetch_row($result)[0];
-	apcu_store("themes_total",$themes_total,$apcu_ttl);
-  mysql_free_result($result);
-}
-
-$themes_eliminated = apcu_fetch("themes_eliminated");
-
-if ( $themes_eliminated === false ) {
-	$query = 'SELECT count(`id`) AS total FROM `themes` WHERE `id`>800000;';
-	$result = mysql_query($query);
-	$themes_eliminated = mysql_fetch_row($result)[0];
-	apcu_store("themes_eliminated",$themes_eliminated,$apcu_ttl);
-  mysql_free_result($result);
-}
-
-
-$up_sum = apcu_fetch("themes_up_sum");
-$down_sum = apcu_fetch("themes_down_sum");
-$kill_sum = apcu_fetch("themes_kill_sum");
-$timestamp = apcu_fetch("themes_timestamp");
-
-if ( $up_sum === false ) {
-	$query = "SELECT SUM(`up`) as up_sum, SUM(`down`) as down_sum, SUM(`kill`) as kill_sum FROM `themes`;";
-	$result = mysql_query($query);
-	$row = mysql_fetch_row($result);
-	$up_sum = $row[0];
-	$down_sum = $row[1];
-	$kill_sum = $row[2];
-	apcu_store("themes_up_sum",$up_sum,$apcu_ttl);
-	apcu_store("themes_down_sum",$down_sum,$apcu_ttl);
-	apcu_store("themes_kill_sum",$kill_sum,$apcu_ttl);
-	apcu_store("themes_timestamp",time(),$apcu_ttl);
-  mysql_free_result($result);
-}
-
-$total_sum = $up_sum+$down_sum+$kill_sum;
-
-echo '<small><b>Stats:</b> '.($themes_total).' total themes, '.($themes_eliminated).' eliminated (so far).<br />'.number_format($total_sum).' votes so far (U:'.number_format($up_sum).' D:'.number_format($down_sum).' S:'.number_format($kill_sum).').<br /><!--<strong>Updated:</strong> '.date(DATE_COOKIE,$timestamp).'--></small>';
-
-//mysql_free_result($result2);
-mysql_close($link);
 ?>
