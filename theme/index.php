@@ -1,16 +1,17 @@
 <?php
 
-define('RESULTS_VAR', 'polder');
-
-// if (!isset($_GET[RESULTS_VAR])) {
-// 	echo "Thanks Everyone! You did great!";
-// 	die;
-// }
-
-error_reporting(0);
 
 /* Copy "settings-example.php" to "settings.php", and make your changes */
 include 'settings.php';
+
+// if (!isset($_GET[RESULTS_VAR])) {
+//  echo "Thanks Everyone! You did great!";
+//  die;
+// }
+
+if (PRODUCTION) {
+  error_reporting(0);
+}
 
 /*
 CREATE DATABASE ludum_theme;

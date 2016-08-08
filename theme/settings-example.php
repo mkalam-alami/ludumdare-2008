@@ -1,5 +1,8 @@
 <?php
 
+define('RESULTS_VAR', 'polder');
+define('PRODUCTION', false);
+
 $login = 'ludum_theme';
 $password = '';
 $database = 'ludum_theme';
