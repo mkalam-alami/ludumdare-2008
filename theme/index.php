@@ -515,6 +515,7 @@ mysql_close($link);
         #vote a.button:focus
         {
           background-color: #eee;
+          transition: 0.2s;
         }
         #vote a.button:active
         {
@@ -526,11 +527,19 @@ mysql_close($link);
           float: left;
           color: #080;
         }
+        #vote #good:active, #good.active
+        {
+          background-color: #AFB;
+        }
         #bad
         {
           width: 45%;
           float: right;
           color: #800;
+        }
+        #vote #bad:active, #bad.active
+        {
+          background-color: #FBA;
         }
         #slaughter
         {
@@ -538,6 +547,10 @@ mysql_close($link);
           clear: both;
           margin-top: 20px;
           color: #f00;
+        }
+        #vote #slaughter:active, #slaughter.active
+        {
+          background-color: #522;
         }
 
       .info
@@ -556,6 +569,11 @@ mysql_close($link);
           {
             margin-bottom: 0.2em;
           }
+
+      .optional
+      {
+        font-size: 80%;
+      }
 
       @media(max-width: 400px)
       {
@@ -658,15 +676,23 @@ mysql_close($link);
     </footer>
 
     <script>
+    function followLink(id) {
+      var node = document.getElementById(id);
+      node.setAttribute('class', 'button active');
+      setTimeout(function() { // show the colored button for a split second
+        window.location = node.href;
+      }, 100);
+    }
+
     document.addEventListener("keyup", function(evt) {
       var s = String.fromCharCode(evt.keyCode);
 
       if(s === "J") {
-        window.location = document.getElementById('good').href;
+        followLink('good');
       } else if(s === "K") {
-        window.location = document.getElementById('bad').href;
+        followLink('bad');
       } else if(s === "L") {
-        window.location = document.getElementById('slaughter').href;
+        followLink('slaughter');
       }
     }, false);
     </script>
