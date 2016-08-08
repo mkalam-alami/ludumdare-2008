@@ -673,7 +673,7 @@ mysql_close($link);
         <br/>
         Contributors include <a href="https://twitter.com/mikekasprzak" target="_blank">PoV</a> (performance!), <a href="https://twitter.com/LiamLimeGames" target="_blank">LiamLime</a> (keyboard shortcuts!), <a href="https://twitter.com/martijnfrazer">Tijn</a> (better looks!).
         <br />
-        Hosted by  <a href="https://twitter.com/mkalamalami" target="_blank">Wan</a>.
+        Hosted by  <a href="http://ludumdare.com/compo/author/wan/" target="_blank">Wan</a>.
       </p>
     </footer>
 
