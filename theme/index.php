@@ -1,5 +1,6 @@
 <?php
 
+// apcu_clear_cache();
 
 /* Copy "settings-example.php" to "settings.php", and make your changes */
 include 'settings.php';
@@ -218,7 +219,7 @@ if (isset($_GET[RESULTS_VAR]))
 	$c=0;
 	$result = mysql_query($query);
 	if (!$result) die('Query error: ' . mysql_error());
-	echo '<h1 style="color:red;font-family:sans-serif;text-align:center;">THEME KILLING RESULTS!</h1>';
+	echo '<h1 style="color:red;font-family:sans-serif;text-align:center;">THEME SLAUGHTER RESULTS!</h1>';
 //	echo '<b style="color:#48f;font-family:sans-serif;text-align:center;display:block;">'.$total['up'].' votes given</b>';
 	echo '<b style="color:#48f;font-family:sans-serif;text-align:center;display:block;">Killvote Weight: '.$killvote_weight.'</b>';
 
