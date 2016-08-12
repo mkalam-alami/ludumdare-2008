@@ -103,8 +103,9 @@ foreach ($bans as $b)
 {
 	if (trim($b)==get_ip())
 	{
-		echo '<H1>FUCK YOU!</h1>';
-		ECHO '<H1>Sincerely, Sos ( just.sos.it@gmail.com )</h1>';
+		echo '<H1>You have been slaughtered from the theme slaughter!</h1>';
+		ECHO '<H1>- The LD team</h1>';
+		echo '<p>(Go post a comment on the LD.com post if you think we wrongly banned you)</p>';
 		die;
 	}
 
