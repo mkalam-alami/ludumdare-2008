@@ -118,40 +118,41 @@ function get_db()
 	$link = mysql_connect('localhost', $login, $password);
 	if (!$link) die('Could not connect: ' . mysql_error());
 	if (!mysql_select_db($database)) die('Could not select database');
+  mysql_set_charset('utf8', $link);
 	return $link;
 }
 
 $link = get_db();
-  
+
 function fetch_random_themes($amount) {
   global $link;
-  
+
   $query = 'SELECT * FROM `themes` WHERE `id`<800000 ORDER BY rand() LIMIT ' . $amount . ';';
   $result = mysql_query($query);
   $themes = array();
-  while ($line = mysql_fetch_array($result, MYSQL_ASSOC)) 
+  while ($line = mysql_fetch_array($result, MYSQL_ASSOC))
   {
     $themes[] = $line;
   }
 	mysql_free_result($result);
-  
+
 	global $do_logging,$log_file;
 	if ( $do_logging == true ) {
 		$ff = fopen($log_file,'a');
 		fwrite($ff,"FETCH\n");
 		fclose($ff);
 	}
-  
+
   return $themes;
 }
 
 function fetch_random_theme_apcu() {
   global $fetch_batch_size;
-  
+
   if ($fetch_batch_size > 1) {
     $random_themes = apcu_fetch("random_themes");
     $size = count($random_themes);
-    
+
     // Refresh themes while optimizing for concurrency
     if ((!$random_themes || $size == 1) && apcu_fetch("random_themes_busy") < time() - 20) {
       apcu_store("random_themes_busy", time());
@@ -160,7 +161,7 @@ function fetch_random_theme_apcu() {
       apcu_store("random_themes", $random_themes);
       apcu_store("random_themes_busy", 0);
     }
-    
+
     // Don't exhaust the theme list in case refreshing is busy
     if ($size > 1) {
       $random_theme = array_pop($random_themes);
@@ -170,14 +171,14 @@ function fetch_random_theme_apcu() {
       if ($size == 0) die('No theme to rate');
       $random_theme = $random_themes[0];
     }
-    
+
     return array($random_theme);
   }
   else {
     return fetch_random_themes(1);
   }
 }
-  
+
 $themes = fetch_random_theme_apcu();
 
 /*
@@ -292,7 +293,7 @@ if (isset($_GET[RESULTS_VAR]))
 
 function vote($type, $id, $ip, $agent, $time) {
 	$id = strval(intval( mysql_real_escape_string($id) ));
-  
+
   switch ($type) {
     case 'UP':
       $query = 'UPDATE `themes` SET `up`=`up`+1, `time`='.time().' WHERE `id`='.$id.' AND `time`<'.(time()-20).';';
@@ -303,7 +304,7 @@ function vote($type, $id, $ip, $agent, $time) {
     default:
       $query = 'UPDATE `themes` SET `down`=`down`+1, `time`='.time().' WHERE `id`='.$id.' AND `time`<'.(time()-20).';';
   }
-  
+
 	if (!mysql_query($query)) {
     mysql_query('COMMIT'); // Still try to commit past votes from the same transaction
     die('Query error: ' . mysql_error());
@@ -321,10 +322,10 @@ function vote($type, $id, $ip, $agent, $time) {
 
 function vote_apcu($type, $score) {
 	global $vote_batch_size;
-    
+
   $agent = "BOT BOT BOT BOT BOT BOT";
   if (isset($_SERVER['HTTP_USER_AGENT'])) $agent = $_SERVER['HTTP_USER_AGENT'];
-  
+
   $time = time();
   if ($vote_batch_size > 1) {
     $pending_votes = apcu_fetch("pending_votes");
@@ -338,21 +339,21 @@ function vote_apcu($type, $score) {
           'agent' => $agent,
           'time' => $time
       );
-    
+
     // Submit to DB while optimizing for concurrency
     if (apcu_fetch("pending_votes_busy") < $time - 20) {
       apcu_store("pending_votes", $pending_votes);
-      
+
       if (count($pending_votes) >= $vote_batch_size) {
         apcu_store("pending_votes_busy", $time);
         apcu_store("pending_votes", array());
-        
+
         if (!mysql_query('START TRANSACTION')) die('Query error: ' . mysql_error());
         foreach ($pending_votes as $pending_vote) {
           vote($pending_vote['type'], $pending_vote['score'], $pending_vote['ip'], $pending_vote['agent'], $pending_vote['time']);
         }
         if (!mysql_query('COMMIT')) die('Query error: ' . mysql_error());
-        
+
         apcu_store("pending_votes_busy", 0);
       }
     }
