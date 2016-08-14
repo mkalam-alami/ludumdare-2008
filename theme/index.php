@@ -42,30 +42,30 @@ LOAD DATA LOCAL INFILE '/home/username/www/theme/ld26.txt' INTO TABLE themes LIN
 */
 
 /*
-REMOVING 
+REMOVING
 
-SELECT * FROM `themes` 
+SELECT * FROM `themes`
 	WHERE `id`<800000 AND (`up`-`down`-(`kill`*3))<-100;
 
 
-UPDATE `themes` 
-	SET `id`=`id`+800000 
+UPDATE `themes`
+	SET `id`=`id`+800000
 	WHERE `id`<800000 AND (`up`-`down`-(`kill`*3))<-100;
 
 
 */
 
-function get_ip() { 
-	$ip; 
-	if (getenv("HTTP_CLIENT_IP")) 
-		$ip = getenv("HTTP_CLIENT_IP"); 
-	else if(getenv("HTTP_X_FORWARDED_FOR")) 
-		$ip = getenv("HTTP_X_FORWARDED_FOR"); 
-	else if(getenv("REMOTE_ADDR")) 
-		$ip = getenv("REMOTE_ADDR"); 
-	else 
+function get_ip() {
+	$ip;
+	if (getenv("HTTP_CLIENT_IP"))
+		$ip = getenv("HTTP_CLIENT_IP");
+	else if(getenv("HTTP_X_FORWARDED_FOR"))
+		$ip = getenv("HTTP_X_FORWARDED_FOR");
+	else if(getenv("REMOTE_ADDR"))
+		$ip = getenv("REMOTE_ADDR");
+	else
 		$ip = "UNKNOWN";
-	return $ip; 
+	return $ip;
 }
 
 function is_bot($user_agent)
@@ -92,7 +92,7 @@ function is_bot($user_agent)
     if(strpos($user_agent,$bot) !== false)
     { return 1; }
   }
-  
+
   return 0;
 }
 
@@ -107,16 +107,17 @@ foreach ($bans as $b)
 		ECHO '<H1>Sincerely, Sos ( just.sos.it@gmail.com )</h1>';
 		die;
 	}
-	
+
 }
 
 function get_db()
 {
 	global $login, $password, $database;
-	
+
 	$link = mysql_connect('localhost', $login, $password);
 	if (!$link) die('Could not connect: ' . mysql_error());
 	if (!mysql_select_db($database)) die('Could not select database');
+  mysql_set_charset('utf8', $link);
 	return $link;
 }
 
@@ -125,7 +126,7 @@ $link = get_db();
 $query = 'SELECT * FROM `themes` WHERE `id`<800000 ORDER BY rand() LIMIT 1;';
 $c=0;
 $result = mysql_query($query);
-while ($line = mysql_fetch_array($result, MYSQL_ASSOC)) 
+while ($line = mysql_fetch_array($result, MYSQL_ASSOC))
 {
 	$themes[$c]=$line;
 	$c++;
@@ -134,7 +135,7 @@ while ($line = mysql_fetch_array($result, MYSQL_ASSOC))
 $total = array();
 $query = 'SELECT * FROM `themes` WHERE `id`=888888;';
 $result2 = mysql_query($query);
-while ($line = mysql_fetch_array($result2, MYSQL_ASSOC)) 
+while ($line = mysql_fetch_array($result2, MYSQL_ASSOC))
 {
 	$total=$line;
 }
@@ -171,9 +172,9 @@ if (isset($_GET['shite']))
 	$c=0;
 	$result = mysql_query($query);
 	if (!$result) die('Query error: ' . mysql_error());
-	echo '<h1 style="color:red;font-family:sans-serif;text-align:center;">THEME KILLING RESULTS!</h1>';              
-//	echo '<b style="color:#48f;font-family:sans-serif;text-align:center;display:block;">'.$total['up'].' votes given</b>';  
-	echo '<b style="color:#48f;font-family:sans-serif;text-align:center;display:block;">Killvote Weight: '.$killvote_weight.'</b>';  
+	echo '<h1 style="color:red;font-family:sans-serif;text-align:center;">THEME KILLING RESULTS!</h1>';
+//	echo '<b style="color:#48f;font-family:sans-serif;text-align:center;display:block;">'.$total['up'].' votes given</b>';
+	echo '<b style="color:#48f;font-family:sans-serif;text-align:center;display:block;">Killvote Weight: '.$killvote_weight.'</b>';
 
 	echo '<table style="width:90%;font-family:sans-serif;">';
 	echo '
@@ -193,9 +194,9 @@ if (isset($_GET['shite']))
 	$ups=0;
 	$downs=0;
 	$kills=0;
-	
+
 	global $killvote_weight;
-	while ($line = mysql_fetch_array($result, MYSQL_ASSOC)) 
+	while ($line = mysql_fetch_array($result, MYSQL_ASSOC))
 	{
 		$votes = $line['up'];
 		$downvotes = $line['down'];
@@ -203,7 +204,7 @@ if (isset($_GET['shite']))
 		$sum = $votes + $downvotes + $killvotes;
 		$updown = $votes - $downvotes;
 		$updownkill = $votes - $downvotes - $killvotes;
-		
+
 		if ( intval($line['id']) < 800000 )
 			echo '<tr style="background:'. (($c&1) ? '#eee' : '#ddd').';">';
 		else
@@ -232,9 +233,9 @@ if (isset($_GET['shite']))
 		$kills+=$line['kill'];
 	}
 	echo '</table>';
-	echo '<b style="color:#4f8;font-family:sans-serif;text-align:center;display:block;">'.$ups.' upvotes given</b>';	
-	echo '<b style="color:#f84;font-family:sans-serif;text-align:center;display:block;">'.$downs.' downvotes given</b>';	
-	echo '<b style="color:#f84;font-family:sans-serif;text-align:center;display:block;">'.$kills.' killvotes given</b>';	
+	echo '<b style="color:#4f8;font-family:sans-serif;text-align:center;display:block;">'.$ups.' upvotes given</b>';
+	echo '<b style="color:#f84;font-family:sans-serif;text-align:center;display:block;">'.$downs.' downvotes given</b>';
+	echo '<b style="color:#f84;font-family:sans-serif;text-align:center;display:block;">'.$kills.' killvotes given</b>';
 		mysql_free_result($result);
 //		mysql_free_result($result2);
 		mysql_close($link);
@@ -251,7 +252,7 @@ if (isset($_GET['up']))
 	if (!mysql_query($query)) die('Query error: ' . mysql_error());
 //	$query = 'UPDATE `themes` SET `up`=`up`+1 WHERE `id`=888888;';
 //	if (!mysql_query($query)) die('Query error: ' . mysql_error());
-	
+
 	global $do_logging,$log_file;
 	if ( $do_logging == true ) {
 		$ff = fopen($log_file,'a');
@@ -269,7 +270,7 @@ if ( isset($_GET['down']))
 	if (!mysql_query($query)) die('Query error: ' . mysql_error());
 //	$query = 'UPDATE `themes` SET `up`=`up`+1 WHERE `id`=888888;';
 //	if (!mysql_query($query)) die('Query error: ' . mysql_error());
-	
+
 	global $do_logging,$log_file;
 	if ( $do_logging == true ) {
 		$ff = fopen($log_file,'a');
@@ -287,7 +288,7 @@ if ( isset($_GET['kill']))
 	if (!mysql_query($query)) die('Query error: ' . mysql_error());
 //	$query = 'UPDATE `themes` SET `up`=`up`+1 WHERE `id`=888888;';
 //	if (!mysql_query($query)) die('Query error: ' . mysql_error());
-	
+
 	global $do_logging,$log_file;
 	if ( $do_logging == true ) {
 		$ff = fopen($log_file,'a');
