@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<meta charset="utf-8" />
+<style type="text/css">
+body {
+  font-family: "Trebuchet MS", Helvetica, sans-serif;
+}
+
+input, textarea, div {
+  width: 100%;
+  max-width: 900px;
+}
+
+textarea {
+  height: 200px;
+}
+
+#voting-output {
+  padding: 20px;
+  background-color: #DDD;
+  font-family: "Courier New", Courier, monospace;
+}
+</style>
+</html>
+<body>
+
+<h1>Ludum Dare tools</h1>
+
+<h2>Theme voting formatting</h2>
+
+<p>Template:<br /><input type="text" id="voting-template" style="width: 100%" value="[compo-vote:open:%%%]" /></p>
+
+<p>Theme list (one per line):<br /><textarea id="voting-list">Test 1
+Test 2
+Test 3
+Test 4
+Test 5</textarea>
+
+<p>Output (themes are randomized):<br />
+<div id="voting-output">&nbsp;</div><br /><button id="voting-shuffle">Shuffle</button></p>
+
+
+<script src="./jquery.min.js"></script>
+<script>
+function shuffle(a) { // source: http://stackoverflow.com/posts/6274381
+    var j, x, i;
+    for (i = a.length; i; i--) {
+        j = Math.floor(Math.random() * i);
+        x = a[i - 1];
+        a[i - 1] = a[j];
+        a[j] = x;
+    }
+}
+
+$(document).ready(function() {
+  function refreshVoting() {
+    var templateValue = $('#voting-template').val();
+    var themeList = $('#voting-list').val();
+    
+    var formattedList = '';
+    var themes = themeList.split(/[\r\n]+/);
+    var filteredThemes = [];
+    themes.forEach(function(theme) {
+      if (theme != '') {
+        filteredThemes.push(theme.trim());
+      }
+    });
+    shuffle(filteredThemes);
+    filteredThemes.forEach(function(theme) {
+      if (formattedList != '') {
+        formattedList += ';';
+      }
+      formattedList += theme;
+    });
+    
+    var output = templateValue.replace('%%%', formattedList);
+    
+    $('#voting-output').html(output);
+  }
+
+  $('#voting-list, #voting-template').change(refreshVoting);
+  $('#voting-shuffle').click(refreshVoting);
+  refreshVoting();
+
+});
+
+</script>
+
+
+</body>
+</html>
